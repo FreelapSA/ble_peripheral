@@ -125,6 +125,48 @@ private class BlePeripheralDarwin: NSObject, BlePeripheralChannel, CBPeripheralM
             peripheralManager.updateValue(value.toData(), for: char!, onSubscribedCentrals: nil)
         }
     }
+    
+    func disconnectAllDevices() throws {
+        // On iOS, we don't have a direct way to disconnect centrals like on Android
+        // We need to use a more aggressive approach to force disconnection
+        let wasAdvertising = peripheralManager.isAdvertising
+        
+        // 1. Stop advertising to prevent new connections
+        if wasAdvertising {
+            peripheralManager.stopAdvertising()
+        }
+        
+        // 2. Save current services for later restoration if needed
+        // We use our own servicesList instead of peripheralManager.services
+        let servicesToRestore = servicesList
+        
+        // 3. Remove all services - this is a more aggressive way to force disconnection
+        peripheralManager.removeAllServices()
+        
+        // 4. For each central, notify that they are disconnected
+        for central in cbCentrals {
+            bleCallback.onConnectionStateChange(
+                deviceId: central.identifier.uuidString,
+                connected: false) { _ in }
+        }
+        
+        // 5. Clear the list of centrals
+        let deviceCount = cbCentrals.count
+        cbCentrals.removeAll()
+        
+        print("Forcefully disconnected \(deviceCount) iOS BLE clients")
+        
+        // 6. Restore services from our saved list
+        for service in servicesToRestore {
+            peripheralManager.add(service)
+        }
+        
+        // 7. If we were advertising before, update status but don't restart
+        // The caller should decide whether to restart advertising
+        if wasAdvertising {
+            bleCallback.onAdvertisingStatusUpdate(advertising: false, error: nil, completion: { _ in })
+        }
+    }
 
     /// Swift callbacks
     internal nonisolated func peripheralManagerDidStartAdvertising(_: CBPeripheralManager, error: Error?) {

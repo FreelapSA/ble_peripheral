@@ -305,6 +305,7 @@ interface BlePeripheralChannel {
   fun getServices(): List<String>
   fun startAdvertising(services: List<String>, localName: String?, timeout: Long?, manufacturerData: ManufacturerData?, addManufacturerDataInScanResponse: Boolean)
   fun updateCharacteristic(characteristicId: String, value: ByteArray, deviceId: String?)
+  fun disconnectAllDevices()
 
   companion object {
     /** The codec used by BlePeripheralChannel. */
@@ -491,6 +492,22 @@ interface BlePeripheralChannel {
             val deviceIdArg = args[2] as String?
             val wrapped: List<Any?> = try {
               api.updateCharacteristic(characteristicIdArg, valueArg, deviceIdArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.ble_peripheral.BlePeripheralChannel.disconnectAllDevices$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.disconnectAllDevices()
               listOf(null)
             } catch (exception: Throwable) {
               wrapError(exception)

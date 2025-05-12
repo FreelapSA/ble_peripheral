@@ -334,6 +334,7 @@ protocol BlePeripheralChannel {
   func getServices() throws -> [String]
   func startAdvertising(services: [String], localName: String?, timeout: Int64?, manufacturerData: ManufacturerData?, addManufacturerDataInScanResponse: Bool) throws
   func updateCharacteristic(characteristicId: String, value: FlutterStandardTypedData, deviceId: String?) throws
+  func disconnectAllDevices() throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -498,6 +499,20 @@ class BlePeripheralChannelSetup {
       }
     } else {
       updateCharacteristicChannel.setMessageHandler(nil)
+    }
+    
+    let disconnectAllDevicesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.ble_peripheral.BlePeripheralChannel.disconnectAllDevices\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      disconnectAllDevicesChannel.setMessageHandler { _, reply in
+        do {
+          try api.disconnectAllDevices()
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      disconnectAllDevicesChannel.setMessageHandler(nil)
     }
   }
 }

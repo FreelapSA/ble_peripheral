@@ -106,6 +106,8 @@ abstract class BlePeripheralChannel {
     Uint8List value,
     String? deviceId,
   );
+
+  void disconnectAllDevices();
 }
 
 /// Native -> Flutter

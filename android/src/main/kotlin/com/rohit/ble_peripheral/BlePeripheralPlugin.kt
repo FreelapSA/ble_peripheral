@@ -178,6 +178,33 @@ class BlePeripheralPlugin : FlutterPlugin, BlePeripheralChannel, ActivityAware {
         }
     }
 
+    override fun disconnectAllDevices() {
+        handler?.post {
+            try {
+                // Créer une copie de la liste des appareils pour éviter les problèmes de concurrence
+                val devicesCopy = ArrayList<BluetoothDevice>(bluetoothDevicesMap.values)
+                
+                // Déconnecter chaque appareil
+                for (device in devicesCopy) {
+                    gattServer?.cancelConnection(device)
+                    // Nettoyer la connexion manuellement car parfois le callback onConnectionStateChange
+                    // n'est pas appelé immédiatement
+                    cleanConnection(device)
+                }
+                
+                // Vider la map des appareils connectés
+                bluetoothDevicesMap.clear()
+                // Vider la map des caractéristiques souscrites
+                subscribedCharDevicesMap.clear()
+                
+                Log.d(TAG, "All devices disconnected")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error disconnecting devices: ${e.message}")
+                throw Exception("Error disconnecting devices: ${e.message}")
+            }
+        }
+    }
+
     override fun updateCharacteristic(
         characteristicId: String,
         value: ByteArray,
@@ -487,6 +514,12 @@ class BlePeripheralPlugin : FlutterPlugin, BlePeripheralChannel, ActivityAware {
                             subscribedCharDevicesMap[it] ?: mutableListOf()
                         if (isSubscribed) {
                             charList.add(characteristicId)
+                            synchronized(bluetoothDevicesMap) {
+                                bluetoothDevicesMap.put(
+                                    device.address,
+                                    device
+                                )
+                            }
                         } else if (charList.contains(characteristicId)) {
                             charList.remove(characteristicId)
                         }
