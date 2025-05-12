@@ -41,6 +41,10 @@ abstract class BlePeripheralInterface {
 
   Future<void> stopAdvertising();
 
+  Future<void> disconnectAllDevices() {
+    throw UnimplementedError();
+  }
+
   /// Callback handlers
   void setAdvertisingStatusUpdateCallback(
       AdvertisementStatusUpdateCallback callback) {

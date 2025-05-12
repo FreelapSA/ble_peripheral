@@ -111,6 +111,10 @@ class BlePeripheralPigeon extends BlePeripheralInterface {
   @override
   Future<void> stopAdvertising() => _channel.stopAdvertising();
 
+  /// Disconnect all connected BLE devices
+  @override
+  Future<void> disconnectAllDevices() => _channel.disconnectAllDevices();
+
   /// Get the callback when advertising is started or stopped
   @override
   void setAdvertisingStatusUpdateCallback(

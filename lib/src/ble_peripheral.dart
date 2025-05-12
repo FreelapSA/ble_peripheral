@@ -86,6 +86,9 @@ class BlePeripheral {
   /// Stop advertising
   static Future<void> stopAdvertising() => _platform.stopAdvertising();
 
+  /// Disconnect all connected BLE devices
+  static Future<void> disconnectAllDevices() => _platform.disconnectAllDevices();
+
   /// Get the callback when advertising is started or stopped
   static void setAdvertisingStatusUpdateCallback(
           AdvertisementStatusUpdateCallback callback) =>
